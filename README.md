@@ -1,5 +1,5 @@
 # Helpful scripts
-Helper scripts for day to day dev productivity - Especially for kickstarting applications
+Helper scripts for day to day dev productivity
 
 ## gemini-cli-custom
 ### What does this folder mean?
