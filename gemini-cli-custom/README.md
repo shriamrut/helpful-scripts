@@ -11,18 +11,25 @@ Install configure docker on the host / computer, where its planned to run
 1) Run the below command
 
 ```
-bash gemini-cli-agent-start.sh
+bash gemini-cli-agent-bootstrap.sh
+```
+**Note** Incase you want to provide an alternative name for the container, provide the name as an argument like the below
+```
+bash gemini-cli-agent-bootstrap.sh <CUSTOM-CONTAINER-NAME
 ```
 
 2) It prompts for the gemini API key which can be obtained from https://aistudio.google.com/apikey
 
 ```
-Please enter your GEMINI_API_KEY: <GEMINI-API-KEY>
+Info: Docker is installed and the daemon is running.
+Using container name as gemini-cli-agent
+Please enter your GEMINI_API_KEY: <GEMINI_API_KEY>
 ```
 
 3) Once container is successfully up, will see the gemini CLI agent running and ready
 
 ```
+
 
    █████████  ██████████ ██████   ██████ █████ ██████   █████ █████
   ███░░░░░███░░███░░░░░█░░██████ ██████ ░░███ ░░██████ ░░███ ░░███
