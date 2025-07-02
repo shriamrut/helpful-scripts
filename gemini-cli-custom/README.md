@@ -15,7 +15,7 @@ bash gemini-cli-agent-bootstrap.sh
 ```
 **Note** Incase you want to provide an alternative name for the container, provide the name as an argument like the below
 ```
-bash gemini-cli-agent-bootstrap.sh <CUSTOM-CONTAINER-NAME
+bash gemini-cli-agent-bootstrap.sh <CUSTOM-CONTAINER-NAME>
 ```
 
 2) It prompts for the gemini API key which can be obtained from https://aistudio.google.com/apikey
