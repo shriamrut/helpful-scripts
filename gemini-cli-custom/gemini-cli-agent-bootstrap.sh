@@ -22,7 +22,7 @@ if docker ps -a --format '{{.Names}}' | grep -wq "$CONTAINER_NAME"; then
 fi
 
 # Prompt the user to enter the GEMINI_API_KEY
-read -p "Please enter your GEMINI_API_KEY: " GEMINI_API_KEY
+read -p "Please enter your GEMINI_API_KEY (Hint: Get it from https://aistudio.google.com/apikey) : " GEMINI_API_KEY
 
 # Build the Docker image
 docker build -t gemini-cli-agent:latest .
