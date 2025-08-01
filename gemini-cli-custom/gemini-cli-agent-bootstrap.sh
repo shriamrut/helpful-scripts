@@ -15,21 +15,31 @@ CONTAINER_NAME="${1:-gemini-cli-agent}"
 
 echo "Using container name as $CONTAINER_NAME"
 
-# Check if the container with same name exists
-if docker ps -a --format '{{.Names}}' | grep -wq "$CONTAINER_NAME"; then
-  echo "Error: Container '$CONTAINER_NAME' already exists. Please remove or rename the container or use a different name in argument." >&2
+# Build the Docker image
+docker build -t gemini-cli-agent:latest .
+if [ $? -ne 0 ]; then
+  echo "Error: Docker image build failed."
   exit 1
 fi
 
-# Prompt the user to enter the GEMINI_API_KEY
-read -p "Please enter your GEMINI_API_KEY (Hint: Get it from https://aistudio.google.com/apikey) : " GEMINI_API_KEY
-
-# Build the Docker image
-docker build -t gemini-cli-agent:latest .
-
-# Run the Docker container, passing the API key as an environment variable
-# and executing the 'gemini command' within the container.
-docker run -i -t --name $CONTAINER_NAME -e GEMINI_API_KEY="$GEMINI_API_KEY" gemini-cli-agent sh -c "gemini"
-
-# Remove the container with name $CONTAINER_NAME when exiting
-docker rm $CONTAINER_NAME
+# Check if the container exists
+if docker ps -a --format '{{.Names}}' | grep -wq "$CONTAINER_NAME"; then
+  # If the container exists but is not running, start it
+  if ! docker ps --format '{{.Names}}' | grep -wq "$CONTAINER_NAME"; then
+    echo "Info: Starting existing container '$CONTAINER_NAME'."
+    docker start "$CONTAINER_NAME"
+  else
+    echo "Info: Reusing running container '$CONTAINER_NAME'."
+  fi
+  # Exec into the running container and run the gemini command
+  docker exec -it "$CONTAINER_NAME" sh -c "gemini"
+else
+  # Run a new container if it doesn't exist
+  # Prompt the user to enter the GEMINI_API_KEY
+  read -p "Please enter your GEMINI_API_KEY (Hint: Get it from https://aistudio.google.com/apikey) : " GEMINI_API_KEY
+  docker run -i -t --name "$CONTAINER_NAME" -e GEMINI_API_KEY="$GEMINI_API_KEY" gemini-cli-agent sh -c "gemini"
+  if [ $? -ne 0 ]; then
+    echo "Error: Docker container failed to run."
+    exit 1
+  fi
+fi
