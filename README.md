@@ -10,3 +10,6 @@ Running or trying out agents in isolated containers, is the safest way to ensure
 
 
 **Note:** Currently only verified in Apple silicon docker desktop, for other operating systems, lets hope it works!
+
+## mermaid-render
+Mermaid diagram renderer in local system, for avoiding to use online renderer application for privacy
