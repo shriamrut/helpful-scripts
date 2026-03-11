@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mermaid Renderer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f9f9f8;
+    color: #1a1a1a;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: #fff;
+    border-bottom: 1px solid #e8e8e6;
+    flex-shrink: 0;
+  }
+
+  .logo { font-size: 15px; font-weight: 600; letter-spacing: -0.2px; color: #111; }
+  .logo span { color: #7c6fcd; }
+
+  .controls { display: flex; align-items: center; gap: 10px; }
+
+  select {
+    font-size: 13px;
+    padding: 6px 10px;
+    border: 1px solid #e0e0de;
+    border-radius: 7px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    outline: none;
+  }
+  select:focus { border-color: #7c6fcd; }
+
+  button {
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+
+  .btn-download {
+    background: #7c6fcd;
+    color: #fff;
+  }
+  .btn-download:hover { background: #6a5ebd; }
+  .btn-download:disabled { background: #c5bfea; cursor: default; }
+
+  main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .pane-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #999;
+    padding: 10px 16px 8px;
+    background: #fff;
+    border-bottom: 1px solid #e8e8e6;
+  }
+
+  .divider {
+    width: 1px;
+    background: #e8e8e6;
+    flex-shrink: 0;
+  }
+
+  textarea {
+    flex: 1;
+    resize: none;
+    border: none;
+    outline: none;
+    padding: 16px;
+    font-family: 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+    font-size: 13.5px;
+    line-height: 1.7;
+    background: #fff;
+    color: #222;
+    tab-size: 2;
+  }
+
+  #preview {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #f9f9f8;
+    position: relative;
+  }
+
+  #diagram-output {
+    max-width: 100%;
+  }
+
+  #diagram-output svg {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+
+  .error-msg {
+    background: #fff3f3;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 380px;
+    white-space: pre-wrap;
+  }
+
+  .placeholder {
+    color: #bbb;
+    font-size: 14px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">mermaid<span>.</span>render</div>
+  <div class="controls">
+    <select id="theme-select">
+      <option value="default">Default</option>
+      <option value="dark">Dark</option>
+      <option value="forest">Forest</option>
+      <option value="neutral">Neutral</option>
+      <option value="base">Base</option>
+    </select>
+    <button class="btn-download" id="download-btn" disabled>↓ Download PNG</button>
+  </div>
+</header>
+
+<main>
+  <div class="pane">
+    <div class="pane-label">Code</div>
+    <textarea id="editor" spellcheck="false" placeholder="Write your Mermaid diagram here...">graph TD
+  A[Start] --> B{Is it working?}
+  B -- Yes --> C[Great!]
+  B -- No --> D[Debug]
+  D --> B</textarea>
+  </div>
+  <div class="divider"></div>
+  <div class="pane">
+    <div class="pane-label">Preview</div>
+    <div id="preview">
+      <div id="diagram-output"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const editor = document.getElementById('editor');
+  const output = document.getElementById('diagram-output');
+  const themeSelect = document.getElementById('theme-select');
+  const downloadBtn = document.getElementById('download-btn');
+
+  let currentTheme = 'default';
+  let renderCount = 0;
+  let debounceTimer;
+
+  function initMermaid(theme) {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme,
+      securityLevel: 'loose',
+      fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif',
+    });
+  }
+
+  async function render() {
+    const code = editor.value.trim();
+    if (!code) {
+      output.innerHTML = '<div class="placeholder">Your diagram will appear here.</div>';
+      downloadBtn.disabled = true;
+      return;
+    }
+
+    const id = `mermaid-${++renderCount}`;
+    try {
+      const { svg } = await mermaid.render(id, code);
+      output.innerHTML = svg;
+      downloadBtn.disabled = false;
+    } catch (e) {
+      const msg = e.message || 'Invalid Mermaid syntax.';
+      output.innerHTML = `<div class="error-msg">⚠️ ${msg}</div>`;
+      downloadBtn.disabled = true;
+      // clean up mermaid error element if any
+      document.getElementById(id)?.remove();
+    }
+  }
+
+  function debounceRender() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(render, 400);
+  }
+
+  themeSelect.addEventListener('change', () => {
+    currentTheme = themeSelect.value;
+    initMermaid(currentTheme);
+    render();
+  });
+
+  editor.addEventListener('input', debounceRender);
+
+  downloadBtn.addEventListener('click', () => {
+    const svg = output.querySelector('svg');
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = () => {
+      const scale = 2;
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+
+      // White background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, img.width, img.height);
+      ctx.drawImage(img, 0, 0);
+
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'diagram.png';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 100);
+      }, 'image/png');
+    };
+    img.src = url;
+  });
+
+  // Init
+  initMermaid(currentTheme);
+  render();
+</script>
+</body>
+</html>
