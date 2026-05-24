@@ -1,0 +1,33 @@
+{
+  "name": "ssh-manager",
+  "version": "1.0.0",
+  "description": "A secure, developer-friendly SSH session manager with TUI. Never type a password or rebuild a jump chain again.",
+  "main": "index.js",
+  "bin": {
+    "ssh-manager": "./index.js",
+    "sm": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "ssh",
+    "tui",
+    "devtools",
+    "terminal"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0",
+    "chalk": "^4.1.2",
+    "cli-table3": "^0.6.5",
+    "commander": "^12.1.0",
+    "crypto-js": "^4.2.0",
+    "figlet": "^1.8.0",
+    "gradient-string": "^2.0.2",
+    "inquirer": "^8.2.6",
+    "ssh2": "^1.16.0",
+    "uuid": "^10.0.0"
+  }
+}
